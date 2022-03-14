@@ -38,7 +38,13 @@ class FavoriteMoviesFragment : Fragment(), MdbData.MdbDataObservers,MdbApi.Callb
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
-        adapter = FavoriteMovieAdapter((requireActivity().applicationContext as MdbApplication).data.actualUser.getFavoriteMovies().toMutableList())
+        adapter = if ((requireActivity().applicationContext as MdbApplication).data.isActualUserInitialized()){
+            FavoriteMovieAdapter((requireActivity().applicationContext as MdbApplication).data.actualUser.getFavoriteMovies().toMutableList())
+        }
+        else{
+            FavoriteMovieAdapter(mutableListOf())
+        }
+
         Log.d("Favorite","inicio fragmento favorite")
         adapter?.movies?.forEach {
             Log.d("Favorite",it.title)

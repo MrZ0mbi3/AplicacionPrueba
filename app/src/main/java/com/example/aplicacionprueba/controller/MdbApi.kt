@@ -2,13 +2,18 @@ package com.example.aplicacionprueba.controller
 
 import android.util.Log
 import com.example.aplicacionprueba.db.MdbData
-import com.example.aplicacionprueba.model.*
+import com.example.aplicacionprueba.db.room.MdbDataBaseRoom
+import com.example.aplicacionprueba.db.room.mapper.toUserEntity
+import com.example.aplicacionprueba.model.FavoriteMovieMessage
+import com.example.aplicacionprueba.model.Movie
+import com.example.aplicacionprueba.model.TokenRequested
+import com.example.aplicacionprueba.model.UserAuth
 import kotlinx.coroutines.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MdbApi(private val data: MdbData) {
+class MdbApi(private val data: MdbData, private val dbRoom: MdbDataBaseRoom) {
     lateinit var sessionId: String
 
     private val favoriteMovieLoaded = AtomicBoolean(false)
@@ -63,12 +68,7 @@ class MdbApi(private val data: MdbData) {
         return movies
     }
 
-    fun requestAuthToken(
-        queryToken: String,
-        querySession: String,
-        userName: String,
-        userPassword: String
-    ) {
+    fun requestAuthToken(queryToken: String, querySession: String, userName: String, userPassword: String) {
         var token: String? = null
         var sessionIdToken: String? = null
         CoroutineScope(Dispatchers.Main.immediate).launch {
@@ -127,6 +127,7 @@ class MdbApi(private val data: MdbData) {
 
                     movies = call.body()?.results as MutableList<Movie>
                     data.actualUser.addAll(movies)
+                    dbRoom.UserDao().updateUser(data.actualUser.toUserEntity())
                 }
                 favoriteMovieLoaded.set(true)
             }
