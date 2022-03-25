@@ -5,10 +5,7 @@ import com.example.aplicacionprueba.db.room.mapper.toUserEntity
 import com.example.aplicacionprueba.model.DbUsers
 import com.example.aplicacionprueba.model.Movie
 import com.example.aplicacionprueba.model.User
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class MdbData(val roomDB: MdbDataBaseRoom) {
     val observers = mutableListOf<MdbDataObservers>()
@@ -22,21 +19,21 @@ class MdbData(val roomDB: MdbDataBaseRoom) {
     }
     fun isActualUserInitialized() = ::actualUser.isInitialized
 
-    fun updateFavoriteMovie(movie: Movie, save: Boolean) {
-        CoroutineScope(Dispatchers.Main.immediate).launch {
-            withContext(Dispatchers.IO) {
-                if (save) {
-                    actualUser.addFavoriteMovie(movie)
+    suspend fun updateFavoriteMovie(movie: Movie, save: Boolean) {
 
-                } else {
-                    actualUser.removeFavoriteMovie(movie)
-                }
-                roomDB.UserDao().updateUser(actualUser.toUserEntity())
-            }
-            observers.forEach {
-                it.onFavoriteUpdate(actualUser.getFavoriteMovies())
-            }
+        if (save) {
+            actualUser.addFavoriteMovie(movie)
+
+        } else {
+            actualUser.removeFavoriteMovie(movie)
         }
+        roomDB.UserDao().updateUser(actualUser.toUserEntity())
+
+
+        observers.forEach {
+            it.onFavoriteUpdate(actualUser.getFavoriteMovies())
+        }
+
     }
 
     private fun findMovie(movieName: String): Movie? {

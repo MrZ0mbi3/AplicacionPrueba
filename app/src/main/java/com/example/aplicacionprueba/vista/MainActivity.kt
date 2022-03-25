@@ -7,66 +7,23 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.example.aplicacionprueba.R
-import com.example.aplicacionprueba.controller.MdbService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.Dispatcher
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.example.aplicacionprueba.model.Movie
+import com.example.aplicacionprueba.viewmodel.MovieViewModel
 
 class MainActivity : AppCompatActivity() {
+    private val movieListViewModel: MovieViewModel by viewModels(factoryProducer = {
+        MovieViewModel.Factory(appContext = this.applicationContext)
+    })
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
-        Toast.makeText(this, "OnCreate actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onCreate Activity")
-
-
     }
-
-    override fun onStart() {
-        Toast.makeText(this, "OnStart actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onStart Activity")
-        super.onStart()
-    }
-
-    override fun onResume() {
-        Toast.makeText(this, "OnResume actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onResume Activity")
-        super.onResume()
-    }
-
-    override fun onPause() {
-        Toast.makeText(this, "OnPause actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onPause Activity")
-        super.onPause()
-    }
-
-    override fun onStop() {
-        Toast.makeText(this, "onStop actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onStop Activity")
-        super.onStop()
-    }
-
-    override fun onRestart() {
-        Toast.makeText(this, "onRestart actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onRestart Activity")
-        super.onRestart()
-    }
-
-    override fun onDestroy() {
-        Toast.makeText(this, "onDestroy actividad 1", Toast.LENGTH_LONG).show()
-        Log.d("lifeCycle", "onDestroy Activity")
-        super.onDestroy()
-    }
-
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
         return true
     }
@@ -86,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
+    fun updateFavorite(movie: Movie, isChecked:Boolean){
+        movieListViewModel.updateFavoriteMovieUser(movie,isChecked)
+    }
 }

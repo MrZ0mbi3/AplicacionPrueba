@@ -13,40 +13,9 @@ class SecondActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_second)
         setSupportActionBar(findViewById(R.id.toolbar))
-        Toast.makeText(this,"onCreate actividad 2", Toast.LENGTH_LONG).show()
     }
 
-    override fun onStart() {
-        Toast.makeText(this,"OnStart actividad 2", Toast.LENGTH_LONG).show()
-        super.onStart()
-    }
-
-    override fun onResume() {
-        Toast.makeText(this,"OnResume actividad 2", Toast.LENGTH_LONG).show()
-        super.onResume()
-    }
-
-    override fun onPause() {
-        Toast.makeText(this,"OnPause actividad 2", Toast.LENGTH_LONG).show()
-        super.onPause()
-    }
-
-    override fun onStop() {
-        Toast.makeText(this,"onStop actividad 2", Toast.LENGTH_LONG).show()
-        super.onStop()
-    }
-
-    override fun onRestart() {
-        Toast.makeText(this,"onRestart actividad 2", Toast.LENGTH_LONG).show()
-        super.onRestart()
-    }
-
-    override fun onDestroy() {
-        Toast.makeText(this,"onDestroy actividad 2", Toast.LENGTH_LONG).show()
-        super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu,menu)
         return true
     }

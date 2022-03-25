@@ -5,14 +5,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.aplicacionprueba.MdbApplication
 import com.example.aplicacionprueba.R
-import com.example.aplicacionprueba.controller.MdbApi
 import com.example.aplicacionprueba.controller.MovieAdapter
-import com.example.aplicacionprueba.model.Movie
+import com.example.aplicacionprueba.viewmodel.MovieState
+import com.example.aplicacionprueba.viewmodel.MovieViewModel
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -24,13 +27,16 @@ private const val ARG_PARAM2 = "param2"
  * Use the [ActualMoviesFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class ActualMoviesFragment : Fragment(), MdbApi.CallbackActualMovies {
+class ActualMoviesFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-
-
     private val adapter: MovieAdapter by lazy { MovieAdapter(mutableListOf()) }
+    private val movieListViewModel: MovieViewModel by viewModels(
+        ownerProducer = { requireActivity() },
+        factoryProducer = {
+            MovieViewModel.Factory(appContext = this.requireContext().applicationContext)
+        })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,22 +45,41 @@ class ActualMoviesFragment : Fragment(), MdbApi.CallbackActualMovies {
             param2 = it.getString(ARG_PARAM2)
         }
 
-        with((requireActivity().applicationContext as MdbApplication)){
-            mdbApi.callbackActualMovies = this@ActualMoviesFragment
-            mdbApi.getActualMovies("3/discover/movie?api_key=267e487850dbcabfc3958c5f0b40bb10&language=en-US")
-        }
+        initData()
+    }
+
+    private fun initData() {
+        movieListViewModel.getActualMovies()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view =inflater.inflate(R.layout.fragment_actual_movies, container, false)
+        val view = inflater.inflate(R.layout.fragment_actual_movies, container, false)
         initRecycleActualMovie(view)
 
 
         // Inflate the layout for this fragment
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val progressBar = view.findViewById<ProgressBar>(R.id.progressActual)
+        movieListViewModel.movielistModel.observe(viewLifecycleOwner) {
+            when (it){
+                is MovieState.LoadingMovies -> progressBar.isVisible = true
+                is MovieState.MovieError -> {
+                    progressBar.isVisible = false
+                    Toast.makeText(requireActivity(),"No hay conexion a internet",Toast.LENGTH_LONG).show()
+                }
+                is MovieState.MovieSuccess -> {
+                    progressBar.isVisible = false
+                    adapter.add(it.data)
+                }
+            }
+        }
     }
 
     companion object {
@@ -77,29 +102,14 @@ class ActualMoviesFragment : Fragment(), MdbApi.CallbackActualMovies {
             }
     }
 
-    fun initRecycleActualMovie(view: View){
+    fun initRecycleActualMovie(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.rvActualMovies)
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = adapter
     }
 
+
     override fun onDestroyView() {
-        with((requireActivity().applicationContext as MdbApplication)) {
-            mdbApi.callbackActualMovies = null
-        }
         super.onDestroyView()
     }
-
-    override fun onDetach() {
-
-        super.onDetach()
-    }
-    override fun onActualMoviesSuccess(movieList: List<Movie>) {
-        adapter.add(movieList)
-    }
-
-    override fun onActualMoviesError() {
-        Log.e(ActualMoviesFragment::class.java.simpleName, "There was an error fetching actual movies")
-    }
-
 }

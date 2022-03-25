@@ -6,15 +6,19 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.Toast
+import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.aplicacionprueba.MdbApplication
 import com.example.aplicacionprueba.R
 import com.example.aplicacionprueba.controller.FavoriteMovieAdapter
 import com.example.aplicacionprueba.controller.MdbApi
 import com.example.aplicacionprueba.db.MdbData
 import com.example.aplicacionprueba.model.Movie
-import java.util.*
+import com.example.aplicacionprueba.viewmodel.MovieState
+import com.example.aplicacionprueba.viewmodel.MovieViewModel
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -31,6 +35,9 @@ class FavoriteMoviesFragment : Fragment(), MdbData.MdbDataObservers,MdbApi.Callb
     private var param1: String? = null
     private var param2: String? = null
     private var adapter: FavoriteMovieAdapter ?= null
+    private val favoriteMovieListViewModel: MovieViewModel by viewModels(ownerProducer = { requireActivity() },factoryProducer = {
+        MovieViewModel.Factory(appContext = this.requireContext().applicationContext)
+    })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,24 +45,15 @@ class FavoriteMoviesFragment : Fragment(), MdbData.MdbDataObservers,MdbApi.Callb
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
-        adapter = if ((requireActivity().applicationContext as MdbApplication).data.isActualUserInitialized()){
-            FavoriteMovieAdapter((requireActivity().applicationContext as MdbApplication).data.actualUser.getFavoriteMovies().toMutableList())
-        }
-        else{
-            FavoriteMovieAdapter(mutableListOf())
-        }
+
+        initFavorite()
+
 
         Log.d("Favorite","inicio fragmento favorite")
         adapter?.movies?.forEach {
             Log.d("Favorite",it.title)
         }
 
-
-        with((requireActivity().applicationContext as MdbApplication)){
-            mdbApi.callbackFavoriteMovies=this@FavoriteMoviesFragment
-            //mdbApi.getFavoriteMovies("3/account/{account_id}/favorite/movies?api_key=267e487850dbcabfc3958c5f0b40bb10&session_id=",mdbApi.sessionId)
-            data.addObserver(this@FavoriteMoviesFragment)
-        }
 
     }
 
@@ -65,16 +63,28 @@ class FavoriteMoviesFragment : Fragment(), MdbData.MdbDataObservers,MdbApi.Callb
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_favorite_movies, container, false)
-        adapter?.add(listOf(
-            Movie(true, "", emptyList(), 1, "", "", "", 2.0, "", "", UUID.randomUUID().toString(), true, 1.0, 1),
-            Movie(true, "", emptyList(), 2, "", "", "", 2.0, "", "", UUID.randomUUID().toString(), true, 1.0, 1),
-            Movie(true, "", emptyList(), 3, "", "", "", 2.0, "", "", UUID.randomUUID().toString(), true, 1.0, 1)
-        ))
         initRecyclerViewFav(view)
 
 
         // Inflate the layout for this fragment
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        super.onViewCreated(view, savedInstanceState)
+        val progressBar = view.findViewById<ProgressBar>(R.id.progressFavorite)
+        favoriteMovieListViewModel.favoriteMovielistModel.observe(viewLifecycleOwner) {
+            when (it){
+                is MovieState.LoadingMovies -> progressBar.isVisible = it.activate
+                is MovieState.MovieError -> Toast.makeText(requireActivity(),"No hay conexion a internet",Toast.LENGTH_LONG).show()
+                is MovieState.MovieSuccess -> adapter?.add(it.data)
+            }
+        }
+    }
+    fun initFavorite(){
+        adapter = FavoriteMovieAdapter(mutableListOf())
+        favoriteMovieListViewModel.getFavoriteMovies()
     }
 
 
@@ -117,10 +127,6 @@ class FavoriteMoviesFragment : Fragment(), MdbData.MdbDataObservers,MdbApi.Callb
     }
 
     override fun onDetach() {
-        with((requireActivity().applicationContext as MdbApplication)){
-            mdbApi.callbackFavoriteMovies= null
-            data.removeObserver(this@FavoriteMoviesFragment)
-        }
         super.onDetach()
     }
 }

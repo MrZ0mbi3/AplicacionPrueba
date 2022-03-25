@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.aplicacionprueba.MdbApplication
 import com.example.aplicacionprueba.R
 import com.example.aplicacionprueba.model.Movie
+import com.example.aplicacionprueba.vista.ActualMoviesFragment
+import com.example.aplicacionprueba.vista.MainActivity
 
 class MovieAdapter(val movies: MutableList<Movie>) :
     RecyclerView.Adapter<MovieAdapter.MovieHolder>() {
@@ -40,15 +42,11 @@ class MovieAdapter(val movies: MutableList<Movie>) :
         holder.switch.isChecked = movies[position].isSelected
         holder.switch.setOnCheckedChangeListener { buttonView, isChecked ->
             movies[position].isSelected = !movies[position].isSelected
-            val title: String = holder.textViewNameMovie.text.toString()
-            val mdbApp = (holder.view.context.applicationContext as MdbApplication)
 
-            mdbApp.data.updateFavoriteMovie(movies[position], isChecked)
-            mdbApp.mdbApi.setFavoriteMovie("3/account/{account_id}/favorite?api_key=267e487850dbcabfc3958c5f0b40bb10&session_id=" + mdbApp.mdbApi.sessionId, movies[position],isChecked)
-            Log.d(
-                "Switch",
-                "switch was check  by " + mdbApp.data.actualUser.userName + title
-            )
+            (holder.view.context as MainActivity).updateFavorite(movies[position], isChecked)
+
+
+
         }
     }
 
